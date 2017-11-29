@@ -179,6 +179,14 @@ class MasterService GRPC_FINAL {
       ::grpc::Service::RequestAsyncUnary(6, context, request, response,
                                          new_call_cq, notification_cq, tag);
     }
+    void RequestReconfig(
+        ::grpc::ServerContext* context, ReconfigRequest* request,
+        ::grpc::ServerAsyncResponseWriter<ReconfigResponse>* response,
+        ::grpc::CompletionQueue* new_call_cq,
+        ::grpc::ServerCompletionQueue* notification_cq, void* tag) {
+      ::grpc::Service::RequestAsyncUnary(7, context, request, response,
+                                         new_call_cq, notification_cq, tag);
+    }
   };
 };
 

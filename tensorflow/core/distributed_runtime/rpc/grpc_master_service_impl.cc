@@ -36,6 +36,7 @@ static const char* grpcMasterService_method_names[] = {
     "/tensorflow.MasterService/CloseSession",
     "/tensorflow.MasterService/ListDevices",
     "/tensorflow.MasterService/Reset",
+    "/tensorflow.MasterService/Reconfig"
 };
 
 std::unique_ptr<MasterService::Stub> MasterService::NewStub(
@@ -113,7 +114,7 @@ MasterService::Stub::Stub(
 }
 
 MasterService::AsyncService::AsyncService() {
-  for (int i = 0; i < 7; ++i) {
+  for (int i = 0; i < 8; ++i) {
     AddMethod(new ::grpc::RpcServiceMethod(grpcMasterService_method_names[i],
                                            ::grpc::RpcMethod::NORMAL_RPC,
                                            nullptr));

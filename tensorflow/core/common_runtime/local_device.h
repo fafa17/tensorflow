@@ -37,6 +37,10 @@ class LocalDevice : public Device {
               const DeviceAttributes& attributes);
   ~LocalDevice() override;
 
+  void reset_thread_pool(const SessionOptions& option);
+
+  int get_num_thread_in_pool();
+
  private:
   static bool use_global_threadpool_;
 
@@ -48,6 +52,8 @@ class LocalDevice : public Device {
   std::unique_ptr<EigenThreadPoolInfo> owned_tp_info_;
 
   friend class test::Benchmark;
+
+  static std::unique_ptr<LocalDevice::EigenThreadPoolInfo> global_tp_info;
 
   TF_DISALLOW_COPY_AND_ASSIGN(LocalDevice);
 };

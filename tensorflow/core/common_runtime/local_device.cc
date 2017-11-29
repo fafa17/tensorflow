@@ -29,6 +29,8 @@ namespace tensorflow {
 
 /* static */
 bool LocalDevice::use_global_threadpool_ = true;
+std::unique_ptr<LocalDevice::EigenThreadPoolInfo> LocalDevice::global_tp_info =
+    std::unique_ptr<LocalDevice::EigenThreadPoolInfo>(nullptr);
 
 struct LocalDevice::EigenThreadPoolInfo {
   explicit EigenThreadPoolInfo(const SessionOptions& options) {
@@ -62,16 +64,25 @@ struct LocalDevice::EigenThreadPoolInfo {
 LocalDevice::LocalDevice(const SessionOptions& options,
                          const DeviceAttributes& attributes)
     : Device(options.env, attributes), owned_tp_info_(nullptr) {
-  // If we're running on the CPU, log warnings if we're not compiled using the
-  // best flags for performance.
+  // Log info messages if TensorFlow is not compiled with instructions that
+  // could speed up performance and are available on the current CPU.
   port::WarnAboutUnusedCPUFeatures();
+  if(use_global_threadpool_ && global_tp_info.get() == nullptr)
+    reset_thread_pool(options);
+  if(!use_global_threadpool_)
+    reset_thread_pool(options);
+}
+
+
+void LocalDevice::reset_thread_pool(const SessionOptions& options) {
+
   LocalDevice::EigenThreadPoolInfo* tp_info;
   if (use_global_threadpool_) {
     // All ThreadPoolDevices in the process will use this single fixed
     // sized threadpool for numerical computations.
-    static LocalDevice::EigenThreadPoolInfo* global_tp_info =
-        new LocalDevice::EigenThreadPoolInfo(options);
-    tp_info = global_tp_info;
+
+    global_tp_info.reset(new LocalDevice::EigenThreadPoolInfo(options));
+    tp_info = global_tp_info.get();
   } else {
     // Each LocalDevice owns a separate ThreadPoolDevice for numerical
     // computations.
@@ -80,6 +91,10 @@ LocalDevice::LocalDevice(const SessionOptions& options,
   }
   set_tensorflow_cpu_worker_threads(&tp_info->eigen_worker_threads_);
   set_eigen_cpu_device(tp_info->eigen_device_.get());
+}
+
+int LocalDevice::get_num_thread_in_pool() {
+  return eigen_cpu_device()->numThreads();
 }
 
 LocalDevice::~LocalDevice() {}
