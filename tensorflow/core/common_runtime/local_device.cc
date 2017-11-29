@@ -29,6 +29,8 @@ namespace tensorflow {
 
 /* static */
 bool LocalDevice::use_global_threadpool_ = true;
+std::unique_ptr<LocalDevice::EigenThreadPoolInfo> LocalDevice::global_tp_info =
+    std::unique_ptr<LocalDevice::EigenThreadPoolInfo>(nullptr);
 
 struct LocalDevice::EigenThreadPoolInfo {
   explicit EigenThreadPoolInfo(const SessionOptions& options) {
@@ -65,13 +67,23 @@ LocalDevice::LocalDevice(const SessionOptions& options,
   // Log info messages if TensorFlow is not compiled with instructions that
   // could speed up performance and are available on the current CPU.
   port::InfoAboutUnusedCPUFeatures();
+  if(use_global_threadpool_ && global_tp_info.get() == nullptr)
+    reset_thread_pool(options);
+  if(!use_global_threadpool_)
+    reset_thread_pool(options);
+}
+
+LocalDevice::~LocalDevice() {}
+
+void LocalDevice::reset_thread_pool(const SessionOptions& options) {
+
   LocalDevice::EigenThreadPoolInfo* tp_info;
   if (use_global_threadpool_) {
     // All ThreadPoolDevices in the process will use this single fixed
     // sized threadpool for numerical computations.
-    static LocalDevice::EigenThreadPoolInfo* global_tp_info =
-        new LocalDevice::EigenThreadPoolInfo(options);
-    tp_info = global_tp_info;
+
+    global_tp_info.reset(new LocalDevice::EigenThreadPoolInfo(options));
+    tp_info = global_tp_info.get();
   } else {
     // Each LocalDevice owns a separate ThreadPoolDevice for numerical
     // computations.
@@ -82,6 +94,8 @@ LocalDevice::LocalDevice(const SessionOptions& options,
   set_eigen_cpu_device(tp_info->eigen_device_.get());
 }
 
-LocalDevice::~LocalDevice() {}
+int LocalDevice::get_num_thread_in_pool() {
+  return eigen_cpu_device()->numThreads();
+}
 
 }  // namespace tensorflow
