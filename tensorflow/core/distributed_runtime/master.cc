@@ -611,4 +611,8 @@ void Master::Reset(const ResetRequest* req, ResetResponse* resp,
   });
 }
 
+void Master::Reconfig(const ReconfigRequest *req, ReconfigResponse *rep, MyClosure done) {
+  LOG(INFO) << "SelfTF, Trigger Master::Reconfig";
+}
+
 }  // end namespace tensorflow

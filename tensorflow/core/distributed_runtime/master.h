@@ -61,6 +61,8 @@ class Master {
   // See tensorflow::Reset() and the comment on ResetRequest.
   void Reset(const ResetRequest* req, ResetResponse* resp, MyClosure done);
 
+  void Reconfig(const ReconfigRequest* req, ReconfigResponse* rep, MyClosure done);
+
  private:
   typedef Master ME;
 
