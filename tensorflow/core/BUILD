@@ -1312,6 +1312,32 @@ tf_proto_library_cc(
     ],
 )
 
+#tf_proto_library(
+#    name = "master_proto",
+#    srcs = ["protobuf/master.proto"],
+#    cc_api_version = 2,
+#    default_header = True,
+#    go_api_version = 2,
+#    j2objc_api_version = 1,
+#    java_api_version = 2,
+#    js_api_version = 2,
+#    visibility = ["//visibility:public"],
+#    protodeps = tf_additional_all_protos()
+#)
+#
+#tf_proto_library(
+#    name = "master_service_proto",
+#    srcs = ["protobuf/master_service.proto"],
+#    cc_api_version = 2,
+#    default_header = True,
+#    go_api_version = 2,
+#    j2objc_api_version = 1,
+#    java_api_version = 2,
+#    js_api_version = 2,
+#    visibility = ["//visibility:public"],
+#    protodeps = [":master_proto"]
+#)
+
 tf_proto_library_cc(
     name = "master_proto",
     srcs = ["protobuf/master.proto"],

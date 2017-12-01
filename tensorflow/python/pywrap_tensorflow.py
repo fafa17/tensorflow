@@ -26,7 +26,7 @@ from tensorflow.python.platform import self_check
 
 
 # Perform pre-load sanity checks in order to produce a more actionable error
-# than we get from an error during SWIG import.
+# than we get from an error during SWIG` import.
 self_check.preload_check()
 
 # pylint: disable=wildcard-import,g-import-not-at-top,unused-import,line-too-long

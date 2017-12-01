@@ -174,7 +174,7 @@ class MasterService final {
     void RequestReset(
         ::grpc::ServerContext* context, ResetRequest* request,
         ::grpc::ServerAsyncResponseWriter<ResetResponse>* response,
-        ::grpc::CompletionQueue* new_call_cq,https://github.com/fafa17/tensorflow.git
+        ::grpc::CompletionQueue* new_call_cq,
         ::grpc::ServerCompletionQueue* notification_cq, void* tag) {
       ::grpc::Service::RequestAsyncUnary(6, context, request, response,
                                          new_call_cq, notification_cq, tag);

@@ -53,6 +53,7 @@ limitations under the License.
 #include "tensorflow/core/protobuf/master.pb.h"
 #include "tensorflow/core/protobuf/worker.pb.h"
 #include "tensorflow/core/public/session_options.h"
+#include "tensorflow/core/util/device_name_utils.h"
 
 namespace tensorflow {
 
@@ -613,6 +614,14 @@ void Master::Reset(const ResetRequest* req, ResetResponse* resp,
 
 void Master::Reconfig(const ReconfigRequest *req, ReconfigResponse *rep, MyClosure done) {
   LOG(INFO) << "SelfTF, Trigger Master::Reconfig";
+  resetInterThreadPool(1);
+
+
+}
+
+void Master::resetInterThreadPool(int new_num_thread){
+  WorkerInterface* wi = env_->worker_cache->CreateWorker(env_->local_devices[0]->name());
+
 }
 
 }  // end namespace tensorflow

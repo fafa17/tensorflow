@@ -63,6 +63,8 @@ class Master {
 
   void Reconfig(const ReconfigRequest* req, ReconfigResponse* rep, MyClosure done);
 
+  void resetInterThreadPool(int new_num_thread);
+
  private:
   typedef Master ME;
 
