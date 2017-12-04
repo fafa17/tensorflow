@@ -612,16 +612,43 @@ void Master::Reset(const ResetRequest* req, ResetResponse* resp,
   });
 }
 
+class SelfTFUtil{
+
+ public:
+  SelfTFUtil(MasterEnv* env_){
+    wi = env_->worker_cache->CreateWorker(env_->local_devices[0]->name());
+  }
+
+  void resetInterThreadPool(int new_pool_size){
+    ResetInterThreadPoolRequest* request = new ResetInterThreadPoolRequest();
+    request->set_new_pool_size(new_pool_size);
+    ResetInterThreadPoolResponse * response = new ResetInterThreadPoolResponse();
+    wi->ResetInterThreadPool(const_cast<ResetInterThreadPoolRequest*>(request), response);
+    delete request;
+    delete response;
+  }
+
+  void resetIntraThreadPool(int new_pool_size){
+    ResetIntraThreadPoolRequest* request = new ResetIntraThreadPoolRequest();
+    request->set_new_pool_size(new_pool_size);
+    ResetIntraThreadPoolResponse * response = new ResetIntraThreadPoolResponse();
+    wi->ResetIntraThreadPool(const_cast<ResetIntraThreadPoolRequest*>(request), response);
+    delete request;
+    delete response;
+  }
+
+ private:
+  WorkerInterface *wi;
+
+
+};
+
 void Master::Reconfig(const ReconfigRequest *req, ReconfigResponse *rep, MyClosure done) {
   LOG(INFO) << "SelfTF, Trigger Master::Reconfig";
-  resetInterThreadPool(1);
-
-
+  SelfTFUtil selfTFUtil(env_);
+  selfTFUtil.resetInterThreadPool(1);
+  selfTFUtil.resetIntraThreadPool(1);
 }
 
-void Master::resetInterThreadPool(int new_num_thread){
-  WorkerInterface* wi = env_->worker_cache->CreateWorker(env_->local_devices[0]->name());
-
-}
 
 }  // end namespace tensorflow

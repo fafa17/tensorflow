@@ -355,3 +355,20 @@ message TracingRequest {
 
 message TracingResponse {
 }
+
+////////////////////////////////////////////////////////////////////////////////
+// SelfTF//
+////////////////////////////////////////////////////////////////////////////////
+message ResetInterThreadPoolRequest{
+  int32 new_pool_size = 1;
+}
+
+message ResetInterThreadPoolResponse{
+}
+
+message ResetIntraThreadPoolRequest{
+  int32 new_pool_size = 1;
+}
+
+message ResetIntraThreadPoolResponse{
+}

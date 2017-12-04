@@ -292,6 +292,16 @@ void Worker::TracingAsync(const TracingRequest* request,
   done(errors::Unimplemented("Tracing"));
 }
 
+void Worker::ResetInterThreadPoolAsync(const ResetInterThreadPoolRequest* request,
+                          ResetInterThreadPoolResponse* response, StatusCallback done) {
+  TRACEPRINTF("Trigger worker reset interThreadPool");
+}
+
+void Worker::ResetIntraThreadPoolAsync(const ResetIntraThreadPoolRequest* request,
+                          ResetIntraThreadPoolResponse* response, StatusCallback done) {
+  TRACEPRINTF("Trigger worker reset intraThreadPool");
+}
+
 // Helper for RecvTensor. Validates "key" and returns the source
 // device in "*src_dev".
 Status Worker::PrepareRecvTensor(const Rendezvous::ParsedKey& parsed,
