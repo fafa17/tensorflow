@@ -252,7 +252,8 @@ message ListDevicesResponse {
 
 //SelfTF
 message ReconfigRequest {
-  ConfigProto config = 1;
+  string session_handle = 1;
+  ConfigProto config = 2;
 }
 
 message ReconfigResponse {

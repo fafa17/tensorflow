@@ -619,18 +619,20 @@ class SelfTFUtil{
     wi = env_->worker_cache->CreateWorker(env_->local_devices[0]->name());
   }
 
-  void resetInterThreadPool(int new_pool_size){
+  void resetInterThreadPool(ConfigProto* config){
+    LOG(INFO) << "SelfTF, Trigger reset inter thread pool";
     ResetInterThreadPoolRequest* request = new ResetInterThreadPoolRequest();
-    request->set_new_pool_size(new_pool_size);
+    request->set_config(config);
     ResetInterThreadPoolResponse * response = new ResetInterThreadPoolResponse();
     wi->ResetInterThreadPool(const_cast<ResetInterThreadPoolRequest*>(request), response);
     delete request;
     delete response;
   }
 
-  void resetIntraThreadPool(int new_pool_size){
+  void resetIntraThreadPool(ConfigProto* config){
+    LOG(INFO) << "SelfTF, Trigger reset intra thread pool";
     ResetIntraThreadPoolRequest* request = new ResetIntraThreadPoolRequest();
-    request->set_new_pool_size(new_pool_size);
+    request->set_config(config);
     ResetIntraThreadPoolResponse * response = new ResetIntraThreadPoolResponse();
     wi->ResetIntraThreadPool(const_cast<ResetIntraThreadPoolRequest*>(request), response);
     delete request;
@@ -645,9 +647,14 @@ class SelfTFUtil{
 
 void Master::Reconfig(const ReconfigRequest *req, ReconfigResponse *rep, MyClosure done) {
   LOG(INFO) << "SelfTF, Trigger Master::Reconfig";
+  ConfigProto config;
+  config.set_inter_op_parallelism_threads(1);
+  config.set_intra_op_parallelism_threads(1);
   SelfTFUtil selfTFUtil(env_);
-  selfTFUtil.resetInterThreadPool(1);
-  selfTFUtil.resetIntraThreadPool(1);
+  selfTFUtil.resetInterThreadPool(&config);
+  selfTFUtil.resetIntraThreadPool(&config);
+  LOG(INFO) << "SelfTF, Trigger Master::Reconfig Finish";
+  done(Status::OK());
 }
 
 

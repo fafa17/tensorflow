@@ -360,14 +360,15 @@ message TracingResponse {
 // SelfTF//
 ////////////////////////////////////////////////////////////////////////////////
 message ResetInterThreadPoolRequest{
-  int32 new_pool_size = 1;
+  ConfigProto config = 1;
 }
 
 message ResetInterThreadPoolResponse{
 }
 
 message ResetIntraThreadPoolRequest{
-  int32 new_pool_size = 1;
+  ConfigProto config = 1;
+  string session_handle = 2;
 }
 
 message ResetIntraThreadPoolResponse{

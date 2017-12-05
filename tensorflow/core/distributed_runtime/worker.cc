@@ -23,6 +23,8 @@ limitations under the License.
 #include "tensorflow/core/distributed_runtime/worker_session.h"
 #include "tensorflow/core/platform/tracing.h"
 
+#include "tensorflow/core/common_runtime/local_device.h"
+
 namespace tensorflow {
 
 Worker::Worker(WorkerEnv* env)
@@ -294,12 +296,39 @@ void Worker::TracingAsync(const TracingRequest* request,
 
 void Worker::ResetInterThreadPoolAsync(const ResetInterThreadPoolRequest* request,
                           ResetInterThreadPoolResponse* response, StatusCallback done) {
-  TRACEPRINTF("Trigger worker reset interThreadPool");
+  ConfigProto config = request->config();
+  int new_pool_size = config.inter_op_parallelism_threads();
+  int old_pool_size = env_->compute_pool->NumThreads();
+
+  //clear old thread pool
+  delete env_->compute_pool;
+
+  SessionOptions sessionOptions;
+  sessionOptions.config = config;
+  env_->compute_pool = ComputePool(sessionOptions);
+  LOG(INFO) << "Trigger reset inter thread pool: old size: ", old_pool_size, "new size: ",
+      new_pool_size;
+  done(Status::OK());
 }
 
 void Worker::ResetIntraThreadPoolAsync(const ResetIntraThreadPoolRequest* request,
                           ResetIntraThreadPoolResponse* response, StatusCallback done) {
-  TRACEPRINTF("Trigger worker reset intraThreadPool");
+  ConfigProto config = request->config();
+  auto local_device = static_cast<LocalDevice*>(env_->local_devices[0]);
+  int new_pool_size = config.intra_op_parallelism_threads();
+  int old_pool_size = local_device->get_num_thread_in_pool();
+
+  // set
+  assert(env_->local_devices.size() == 1);
+
+  SessionOptions sessionOptions;
+  sessionOptions.config = config;
+
+  local_device->reset_thread_pool(sessionOptions);
+
+  LOG(INFO) << "Trigger reset intra thread pool: old size: ", old_pool_size, "new size: ",
+      new_pool_size;
+  done(Status::OK());
 }
 
 // Helper for RecvTensor. Validates "key" and returns the source

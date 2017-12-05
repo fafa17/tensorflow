@@ -65,6 +65,13 @@ LocalDevice::LocalDevice(const SessionOptions& options,
   // Log info messages if TensorFlow is not compiled with instructions that
   // could speed up performance and are available on the current CPU.
   port::InfoAboutUnusedCPUFeatures();
+  reset_thread_pool(options);
+}
+
+LocalDevice::~LocalDevice() {}
+
+void LocalDevice::reset_thread_pool(const SessionOptions& options) {
+
   LocalDevice::EigenThreadPoolInfo* tp_info;
   if (use_global_threadpool_) {
     // All ThreadPoolDevices in the process will use this single fixed
@@ -82,6 +89,8 @@ LocalDevice::LocalDevice(const SessionOptions& options,
   set_eigen_cpu_device(tp_info->eigen_device_.get());
 }
 
-LocalDevice::~LocalDevice() {}
+int LocalDevice::get_num_thread_in_pool() {
+  return owned_tp_info_->eigen_threadpool_wrapper_->NumThreads();
+}
 
 }  // namespace tensorflow

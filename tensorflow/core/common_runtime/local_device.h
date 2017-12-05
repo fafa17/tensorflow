@@ -37,6 +37,10 @@ class LocalDevice : public Device {
               const DeviceAttributes& attributes);
   ~LocalDevice() override;
 
+  void reset_thread_pool(const SessionOptions& option);
+
+  int get_num_thread_in_pool();
+
  private:
   static bool use_global_threadpool_;
 
