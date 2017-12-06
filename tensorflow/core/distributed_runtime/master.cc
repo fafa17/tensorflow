@@ -622,7 +622,7 @@ class SelfTFUtil{
   void resetInterThreadPool(ConfigProto* config){
     LOG(INFO) << "SelfTF, Trigger reset inter thread pool";
     ResetInterThreadPoolRequest* request = new ResetInterThreadPoolRequest();
-    request->set_config(config);
+    request->set_allocated_config(config);
     ResetInterThreadPoolResponse * response = new ResetInterThreadPoolResponse();
     wi->ResetInterThreadPool(const_cast<ResetInterThreadPoolRequest*>(request), response);
     delete request;
@@ -632,7 +632,7 @@ class SelfTFUtil{
   void resetIntraThreadPool(ConfigProto* config){
     LOG(INFO) << "SelfTF, Trigger reset intra thread pool";
     ResetIntraThreadPoolRequest* request = new ResetIntraThreadPoolRequest();
-    request->set_config(config);
+    request->set_allocated_config(config);
     ResetIntraThreadPoolResponse * response = new ResetIntraThreadPoolResponse();
     wi->ResetIntraThreadPool(const_cast<ResetIntraThreadPoolRequest*>(request), response);
     delete request;
