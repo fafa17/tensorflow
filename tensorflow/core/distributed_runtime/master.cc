@@ -625,8 +625,8 @@ class SelfTFUtil{
     request->set_allocated_config(config);
     ResetInterThreadPoolResponse * response = new ResetInterThreadPoolResponse();
     wi->ResetInterThreadPool(const_cast<ResetInterThreadPoolRequest*>(request), response);
-    delete request;
-    delete response;
+//    delete request;
+//    delete response;
   }
 
   void resetIntraThreadPool(ConfigProto* config){
@@ -635,8 +635,8 @@ class SelfTFUtil{
     request->set_allocated_config(config);
     ResetIntraThreadPoolResponse * response = new ResetIntraThreadPoolResponse();
     wi->ResetIntraThreadPool(const_cast<ResetIntraThreadPoolRequest*>(request), response);
-    delete request;
-    delete response;
+//    delete request;
+//    delete response;
   }
 
  private:

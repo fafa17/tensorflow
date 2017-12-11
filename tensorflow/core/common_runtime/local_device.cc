@@ -76,9 +76,9 @@ void LocalDevice::reset_thread_pool(const SessionOptions& options) {
   if (use_global_threadpool_) {
     // All ThreadPoolDevices in the process will use this single fixed
     // sized threadpool for numerical computations.
-    static LocalDevice::EigenThreadPoolInfo* global_tp_info =
-        new LocalDevice::EigenThreadPoolInfo(options);
-    tp_info = global_tp_info;
+    static std::unique_ptr<LocalDevice::EigenThreadPoolInfo> global_tp_info;
+    global_tp_info.reset(new LocalDevice::EigenThreadPoolInfo(options));
+    tp_info = global_tp_info.get();
   } else {
     // Each LocalDevice owns a separate ThreadPoolDevice for numerical
     // computations.
@@ -90,7 +90,7 @@ void LocalDevice::reset_thread_pool(const SessionOptions& options) {
 }
 
 int LocalDevice::get_num_thread_in_pool() {
-  return owned_tp_info_->eigen_threadpool_wrapper_->NumThreads();
+  return eigen_cpu_device()->numThreads();
 }
 
 }  // namespace tensorflow

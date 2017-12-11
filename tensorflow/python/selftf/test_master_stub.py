@@ -1,7 +1,7 @@
 from __future__ import print_function
 
 import grpc
-from tensorflow.core.protobuf import master_pb2
+import master_pb2
 
 
 class Stub(object):
