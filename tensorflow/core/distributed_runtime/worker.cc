@@ -301,13 +301,17 @@ void Worker::ResetInterThreadPoolAsync(const ResetInterThreadPoolRequest* reques
   int old_pool_size = env_->compute_pool->NumThreads();
 
   //clear old thread pool
-//  delete env_->compute_pool;
+  if(env_->reconfigEnv->prev_compute_pool != nullptr){
+    delete env_->reconfigEnv->prev_compute_pool;
+    env_->reconfigEnv->prev_compute_pool = nullptr;
+  }
 
   SessionOptions sessionOptions;
   sessionOptions.config = config;
+  env_->reconfigEnv->prev_compute_pool = env_->compute_pool;
   env_->compute_pool = new thread::ThreadPool(Env::Default(), "Compute",
                                               new_pool_size);
-  LOG(INFO) << "Trigger reset inter thread pool: old size:" << old_pool_size << "new size:" << new_pool_size;
+  LOG(INFO) << "Trigger reset inter thread pool: old size:" << old_pool_size << ", new size:" << new_pool_size;
   done(Status::OK());
 }
 
@@ -326,7 +330,7 @@ void Worker::ResetIntraThreadPoolAsync(const ResetIntraThreadPoolRequest* reques
 
   local_device->reset_thread_pool(sessionOptions);
 
-  LOG(INFO) << "Trigger reset intra thread pool: old size: " << old_pool_size << "new size: " << new_pool_size;
+  LOG(INFO) << "Trigger reset intra thread pool: old size: " << old_pool_size << ", new size: " << new_pool_size;
   done(Status::OK());
 }
 
