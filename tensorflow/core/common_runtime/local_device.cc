@@ -65,7 +65,10 @@ LocalDevice::LocalDevice(const SessionOptions& options,
   // Log info messages if TensorFlow is not compiled with instructions that
   // could speed up performance and are available on the current CPU.
   port::InfoAboutUnusedCPUFeatures();
-  reset_thread_pool(options);
+  if(use_global_threadpool_ && global_tp_info.get() == nullptr)
+    reset_thread_pool(options);
+  if(!use_global_threadpool_)
+    reset_thread_pool(options);
 }
 
 LocalDevice::~LocalDevice() {}
@@ -76,7 +79,7 @@ void LocalDevice::reset_thread_pool(const SessionOptions& options) {
   if (use_global_threadpool_) {
     // All ThreadPoolDevices in the process will use this single fixed
     // sized threadpool for numerical computations.
-    static std::unique_ptr<LocalDevice::EigenThreadPoolInfo> global_tp_info;
+
     global_tp_info.reset(new LocalDevice::EigenThreadPoolInfo(options));
     tp_info = global_tp_info.get();
   } else {

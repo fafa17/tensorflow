@@ -25,6 +25,7 @@ def run():
   a = tf.get_variable("a", [], initializer=tf.constant_initializer(1))
   b = tf.get_variable("b", [], initializer=tf.constant_initializer(3))
   c = tf.add(a,b,"c")
+  a = tf.assign(a, c)
 
   sv = tf.train.Supervisor()
   # run

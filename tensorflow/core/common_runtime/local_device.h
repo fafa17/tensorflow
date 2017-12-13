@@ -53,6 +53,8 @@ class LocalDevice : public Device {
 
   friend class test::Benchmark;
 
+  static std::unique_ptr<LocalDevice::EigenThreadPoolInfo> global_tp_info;
+
   TF_DISALLOW_COPY_AND_ASSIGN(LocalDevice);
 };
 
