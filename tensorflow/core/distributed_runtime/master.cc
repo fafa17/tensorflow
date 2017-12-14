@@ -646,13 +646,34 @@ class SelfTFUtil{
 };
 
 void Master::Reconfig(const ReconfigRequest *req, ReconfigResponse *rep, MyClosure done) {
+  ReconfigRequest a = ReconfigRequest();
   LOG(INFO) << "SelfTF, Trigger Master::Reconfig";
-  ConfigProto config;
-  config.set_inter_op_parallelism_threads(1);
-  config.set_intra_op_parallelism_threads(1);
+  // Update session_opts
+//  auto session = FindMasterSession(req->session_handle());
+//#Hack !!!!
+  auto session = this->sessions_.end()->second;
+  auto new_config = req->config();
+  auto old_config = session->getConfigProto();
+
   SelfTFUtil selfTFUtil(env_);
-  selfTFUtil.resetInterThreadPool(&config);
-  selfTFUtil.resetIntraThreadPool(&config);
+
+  // Check intra/ inter thread pool change
+  // if yes change them
+  if(new_config.inter_op_parallelism_threads() != old_config.inter_op_parallelism_threads()) {
+    LOG(INFO) << "SelfTF, Detect changes of inter thread pool: old_value:"
+              <<old_config.inter_op_parallelism_threads()
+              <<" new_value:"
+              <<new_config.inter_op_parallelism_threads();
+    selfTFUtil.resetInterThreadPool(&new_config);
+  }
+  if(new_config.intra_op_parallelism_threads() != old_config.intra_op_parallelism_threads())
+    LOG(INFO) << "SelfTF, Detect changes of intra thread pool: old_value:"
+              <<old_config.intra_op_parallelism_threads()
+              <<" new_value:"
+              <<new_config.intra_op_parallelism_threads();
+    selfTFUtil.resetIntraThreadPool(&new_config);
+  session->setConfigProto(new_config);
+
   LOG(INFO) << "SelfTF, Trigger Master::Reconfig Finish";
   done(Status::OK());
 }
