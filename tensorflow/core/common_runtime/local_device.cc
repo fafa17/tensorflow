@@ -29,6 +29,8 @@ namespace tensorflow {
 
 /* static */
 bool LocalDevice::use_global_threadpool_ = true;
+std::unique_ptr<LocalDevice::EigenThreadPoolInfo> LocalDevice::global_tp_info =
+    std::unique_ptr<LocalDevice::EigenThreadPoolInfo>(nullptr);
 
 struct LocalDevice::EigenThreadPoolInfo {
   explicit EigenThreadPoolInfo(const SessionOptions& options) {
