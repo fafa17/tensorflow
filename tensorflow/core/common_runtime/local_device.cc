@@ -64,17 +64,27 @@ struct LocalDevice::EigenThreadPoolInfo {
 LocalDevice::LocalDevice(const SessionOptions& options,
                          const DeviceAttributes& attributes)
     : Device(options.env, attributes), owned_tp_info_(nullptr) {
+  LocalDevice::EigenThreadPoolInfo* tp_info;
   // Log info messages if TensorFlow is not compiled with instructions that
   // could speed up performance and are available on the current CPU.
   port::WarnAboutUnusedCPUFeatures();
-  if(use_global_threadpool_ && global_tp_info.get() == nullptr)
-    reset_thread_pool(options);
-  if(!use_global_threadpool_)
-    reset_thread_pool(options);
+  if((use_global_threadpool_ && global_tp_info.get() == nullptr) || !use_global_threadpool_)
+    tp_info = _reset_thread_pool(options);
+  else
+    tp_info = global_tp_info.get();
+
+  set_tensorflow_cpu_worker_threads(&tp_info->eigen_worker_threads_);
+  set_eigen_cpu_device(tp_info->eigen_device_.get());
 }
 
-
 void LocalDevice::reset_thread_pool(const SessionOptions& options) {
+
+  LocalDevice::EigenThreadPoolInfo *tp_info = this->_reset_thread_pool(options);
+  set_tensorflow_cpu_worker_threads(&tp_info->eigen_worker_threads_);
+  set_eigen_cpu_device(tp_info->eigen_device_.get());
+}
+
+LocalDevice::EigenThreadPoolInfo* LocalDevice::_reset_thread_pool(const SessionOptions& options) {
 
   LocalDevice::EigenThreadPoolInfo* tp_info;
   if (use_global_threadpool_) {
@@ -89,8 +99,7 @@ void LocalDevice::reset_thread_pool(const SessionOptions& options) {
     owned_tp_info_.reset(new LocalDevice::EigenThreadPoolInfo(options));
     tp_info = owned_tp_info_.get();
   }
-  set_tensorflow_cpu_worker_threads(&tp_info->eigen_worker_threads_);
-  set_eigen_cpu_device(tp_info->eigen_device_.get());
+  return tp_info;
 }
 
 int LocalDevice::get_num_thread_in_pool() {
@@ -98,5 +107,6 @@ int LocalDevice::get_num_thread_in_pool() {
 }
 
 LocalDevice::~LocalDevice() {}
+
 
 }  // namespace tensorflow
