@@ -659,7 +659,12 @@ void Master::Reconfig(const ReconfigRequest *req, ReconfigResponse *rep, MyClosu
   // Update session_opts
 //  auto session = FindMasterSession(req->session_handle());
 //#Hack !!!!
-  auto session = this->sessions_.end()->second;
+  MasterSession * session = nullptr;
+  {
+    mutex_lock l(mu_);
+    session = this->sessions_.begin()->second;
+  }
+  assert(session == != nullptr);
   auto new_config = req->config();
   auto old_config = session->getConfigProto();
 
