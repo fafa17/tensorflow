@@ -664,7 +664,7 @@ void Master::Reconfig(const ReconfigRequest *req, ReconfigResponse *rep, MyClosu
     mutex_lock l(mu_);
     session = this->sessions_.begin()->second;
   }
-  assert(session == != nullptr);
+  assert(session != nullptr);
   auto new_config = req->config();
   auto old_config = session->getConfigProto();
 
