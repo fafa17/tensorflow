@@ -1269,6 +1269,10 @@ TF_CAPI_EXPORT extern void TF_DeleteLibraryHandle(TF_Library* lib_handle);
 // in this address space.
 TF_CAPI_EXPORT extern TF_Buffer* TF_GetAllOpList();
 
+typedef struct TF_Config TF_Config;
+TF_CAPI_EXPORT extern void TF_Reconfig(TF_Session*, const void* proto, size_t proto_len);
+TF_CAPI_EXPORT extern void TF_DeprecatedSessionReconfig(TF_DeprecatedSession*, const void* proto, size_t proto_len);
+
 #ifdef __cplusplus
 } /* end extern "C" */
 #endif

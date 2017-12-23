@@ -2398,5 +2398,15 @@ void TF_SessionPRun(TF_Session* session, const char* handle,
   TF_Run_Helper(session->session, handle, nullptr, input_pairs, output_names,
                 output_values, target_names, nullptr, status);
 }
-
-}  // end extern "C"
+}
+void TF_Reconfig(TF_Session * s, const void *proto, size_t proto_len) {
+  TF_Config new_config = TF_Config();
+  new_config.config.ParseFromArray(proto, proto_len);
+  s->session->Reconfig(&new_config.config);
+}
+void TF_DeprecatedSessionReconfig(TF_DeprecatedSession * s, const void *proto, size_t proto_len) {
+  TF_Config new_config = TF_Config();
+  new_config.config.ParseFromArray(proto, proto_len);
+  s->session->Reconfig(&new_config.config);
+}
+// end extern "C"

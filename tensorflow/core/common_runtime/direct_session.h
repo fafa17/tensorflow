@@ -102,6 +102,7 @@ class DirectSession : public Session {
   void ExportCostModels(CostModelManager::CostModelMap* cost_models) {
     cost_model_manager_.ExportCostModels(cost_models);
   }
+  Status Reconfig(ConfigProto *new_config) override;
 
  private:
   typedef DirectSession ME;

@@ -1518,4 +1518,8 @@ void DirectSession::WaitForNotification(RunState* run_state,
   return Status::OK();
 }
 
+tensorflow::Status tensorflow::DirectSession::Reconfig(tensorflow::ConfigProto *new_config) {
+  return Status(error::CANCELLED, "Not implemented");
+}
+
 }  // namespace tensorflow

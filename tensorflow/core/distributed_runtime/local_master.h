@@ -84,6 +84,9 @@ class LocalMaster : public MasterInterface {
   // Returns a pointer to the local master associated with the given
   // `target`, or nullptr if none exists.
   static std::unique_ptr<LocalMaster> Lookup(const string& target);
+  Status Reconfig(CallOptions *call_options,
+                  const ReconfigRequest *request,
+                  ReconfigResponse *response) override;
 
  private:
   Master* master_impl_;  // Not owned.

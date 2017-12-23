@@ -62,6 +62,8 @@ MasterService::Stub::Stub(
       rpcmethod_ListDevices_(grpcMasterService_method_names[5],
                              ::grpc::RpcMethod::NORMAL_RPC, channel),
       rpcmethod_Reset_(grpcMasterService_method_names[6],
+                       ::grpc::RpcMethod::NORMAL_RPC, channel),
+      rpcmethod_Reconfig_(grpcMasterService_method_names[7],
                        ::grpc::RpcMethod::NORMAL_RPC, channel) {}
 
 ::grpc::Status MasterService::Stub::CreateSession(
@@ -110,6 +112,13 @@ MasterService::Stub::Stub(
                                           const ResetRequest& request,
                                           ResetResponse* response) {
   return ::grpc::BlockingUnaryCall(channel_.get(), rpcmethod_Reset_, context,
+                                   request, response);
+}
+
+::grpc::Status MasterService::Stub::Reconfig(::grpc::ClientContext* context,
+                                          const ReconfigRequest& request,
+                                          ReconfigResponse* response) {
+  return ::grpc::BlockingUnaryCall(channel_.get(), rpcmethod_Reconfig_, context,
                                    request, response);
 }
 

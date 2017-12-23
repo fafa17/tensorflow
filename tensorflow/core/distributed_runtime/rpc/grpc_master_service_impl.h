@@ -79,6 +79,9 @@ class MasterService GRPC_FINAL {
     virtual ::grpc::Status Reset(::grpc::ClientContext* context,
                                  const ResetRequest& request,
                                  ResetResponse* response) = 0;
+    virtual ::grpc::Status Reconfig(::grpc::ClientContext* context,
+                                 const ReconfigRequest& request,
+                                 ReconfigResponse* response) = 0;
   };
   class Stub GRPC_FINAL : public StubInterface {
    public:
@@ -105,6 +108,10 @@ class MasterService GRPC_FINAL {
                          const ResetRequest& request,
                          ResetResponse* response) GRPC_OVERRIDE;
 
+    ::grpc::Status Reconfig(::grpc::ClientContext* context,
+                        const ReconfigRequest& request,
+                        ReconfigResponse* response) GRPC_OVERRIDE;
+
    private:
     std::shared_ptr< ::grpc::ChannelInterface> channel_;
     const ::grpc::RpcMethod rpcmethod_CreateSession_;
@@ -114,6 +121,7 @@ class MasterService GRPC_FINAL {
     const ::grpc::RpcMethod rpcmethod_CloseSession_;
     const ::grpc::RpcMethod rpcmethod_ListDevices_;
     const ::grpc::RpcMethod rpcmethod_Reset_;
+    const ::grpc::RpcMethod rpcmethod_Reconfig_;
   };
   static std::unique_ptr<Stub> NewStub(
       const std::shared_ptr< ::grpc::ChannelInterface>& channel,

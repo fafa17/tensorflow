@@ -183,6 +183,8 @@ class Session {
   /// on the TensorFlow runtime (specified during session creation by
   /// the `SessionOptions::target` field).
   virtual Status Close() = 0;
+
+  virtual Status Reconfig(ConfigProto* new_config) = 0;
 };
 
 /// \brief Create a new session with the given options.

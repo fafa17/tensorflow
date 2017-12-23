@@ -32,6 +32,8 @@ limitations under the License.
 #include "tensorflow/core/platform/types.h"
 #include "tensorflow/core/common_runtime/shape_refiner.h"
 
+#include "tensorflow/core/protobuf/config.pb.h"
+
 // Internal structures used by the C API. These are likely to change and should
 // not be depended on.
 
@@ -114,6 +116,10 @@ struct TF_ImportGraphDefOptions {
 
 struct TF_DeviceList {
   std::vector<tensorflow::DeviceAttributes> response;
+};
+
+struct TF_Config{
+  tensorflow::ConfigProto config;
 };
 
 namespace tensorflow {
