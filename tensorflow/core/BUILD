@@ -1192,51 +1192,27 @@ tf_proto_library_cc(
     ],
 )
 
-tf_proto_library(
+tf_proto_library_cc(
     name = "master_proto",
     srcs = ["protobuf/master.proto"],
     cc_api_version = 2,
-    go_api_version = 2,
-    j2objc_api_version = 1,
-    java_api_version = 2,
-    js_api_version = 2,
-    visibility = ["//visibility:public"],
-    protodeps = [":protos_all"]
+    protodeps = [":protos_all"],
+    visibility = [
+        "//tensorflow:internal",
+    ],
 )
 
-tf_proto_library(
+tf_proto_library_cc(
     name = "master_service_proto",
     srcs = ["protobuf/master_service.proto"],
+    has_services = 1,
     cc_api_version = 2,
-    go_api_version = 2,
-    j2objc_api_version = 1,
-    java_api_version = 2,
-    js_api_version = 2,
-    visibility = ["//visibility:public"],
-    protodeps = [":master_proto"]
+    cc_stubby_versions = ["2"],
+    protodeps = [":master_proto"],
+    visibility = [
+        "//tensorflow:internal",
+    ],
 )
-
-#tf_proto_library_cc(
-#    name = "master_proto",
-#    srcs = ["protobuf/master.proto"],
-#    cc_api_version = 2,
-#    protodeps = [":protos_all"],
-#    visibility = [
-#        "//tensorflow:internal",
-#    ],
-#)
-
-#tf_proto_library_cc(
-#    name = "master_service_proto",
-#    srcs = ["protobuf/master_service.proto"],
-#    has_services = 1,
-#    cc_api_version = 2,
-#    cc_stubby_versions = ["2"],
-#    protodeps = [":master_proto"],
-#    visibility = [
-#        "//tensorflow:internal",
-#    ],
-#)
 
 LIB_INTERNAL_WINDOWS_DEPS = glob(
     [
