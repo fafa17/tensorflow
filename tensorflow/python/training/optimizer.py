@@ -35,6 +35,26 @@ from tensorflow.python.training import slot_creator
 from tensorflow.python.util import nest
 
 
+class SelfTFOptimizerContext:
+  """
+  Inject
+  """
+  def __init__(self, variable_map={}, reconfig_phase=0):
+    self.variable_map = variable_map
+
+    """
+    Reconfig phase
+    0 = no reconfig
+    1 = send ps from old ps to new ps
+    """
+    self.reconfig_phase = reconfig_phase
+
+  def get_device_name_by_variable(self, variable):
+    return self.variable_map[variable.name]
+
+  def is_reconfig(self):
+    return self.reconfig_phase != 0
+
 def _get_variable_for(v):
   """Returns the ResourceVariable responsible for v, or v if not necessary."""
   if v.op.type == "VarHandleOp":
@@ -81,6 +101,31 @@ class _OptimizableVariable(object):
   def update_op(self, optimizer, g):
     """Returns the update ops for updating the variable."""
     raise NotImplementedError("Calling an abstract method.")
+
+
+class _SelfTFRefVariableProcessor(_OptimizableVariable):
+  """Processor for Variable."""
+  """for migration use only"""
+
+  def __init__(self, v, context=SelfTFOptimizerContext()):
+    # Copy a new variable
+    self.transfer_op = None
+    with ops.device(context.get_device_name_by_variable(v.name)):
+      replica_v = variables.Variable(v.iinitialized_value(), name=v.name)
+      self.transfer_op = state_ops.assign(replica_v, v) # ???? execute it means ps read from ps ?????
+    self._v = replica_v
+
+  def target(self):
+    return self._v._ref()  # pylint: disable=protected-access
+
+  def update_op(self, optimizer, g):
+    if isinstance(g, ops.Tensor):
+      return optimizer._apply_dense(g, self._v)  # pylint: disable=protected-access
+    else:
+      assert isinstance(g, ops.IndexedSlices), ("Gradient ", g, " is neither a "
+                                                                "tensor nor IndexedSlices.")
+      # pylint: disable=protected-access
+      return optimizer._apply_sparse_duplicate_indices(g, self._v)
 
 
 class _RefVariableProcessor(_OptimizableVariable):
@@ -146,8 +191,10 @@ class _StreamingModelPortProcessor(_OptimizableVariable):
     return g
 
 
-def _get_processor(v):
+def _get_processor(v, seltf_context=SelfTFOptimizerContext()):
   """The processor of v."""
+  if seltf_context.is_reconfig():
+    return
   if v.op.type == "VarHandleOp":
     return _DenseResourceVariableProcessor(v)
   if isinstance(v, variables.Variable):
