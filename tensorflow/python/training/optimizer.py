@@ -21,6 +21,7 @@ from __future__ import division
 from __future__ import print_function
 
 import abc
+import re
 
 from tensorflow.python.framework import dtypes
 from tensorflow.python.framework import ops
@@ -31,15 +32,23 @@ from tensorflow.python.ops import math_ops
 from tensorflow.python.ops import resource_variable_ops
 from tensorflow.python.ops import state_ops
 from tensorflow.python.ops import variables
+from tensorflow.python.ops import variable_scope
 from tensorflow.python.training import slot_creator
 from tensorflow.python.util import nest
+
+import tensorflow.contrib.graph_editor as tfge
 
 
 class SelfTFOptimizerContext:
   """
   Inject
   """
-  def __init__(self, variable_map={}, reconfig_phase=0):
+  worker_cache_suffix = "-selftf_worker"
+  dest_ps_suffix = "-selftf_dest"
+  regex_worker_cache = re.compile("(.*)" + worker_cache_suffix+"$")
+  regex_dest_ps = re.compile("(.*)" + dest_ps_suffix + "$")
+
+  def __init__(self, variable_map={}, reconfig_phase=0, worker_device=""):
     self.variable_map = variable_map
 
     """
@@ -49,11 +58,66 @@ class SelfTFOptimizerContext:
     """
     self.reconfig_phase = reconfig_phase
 
+    self.worker_device = worker_device
+
   def get_device_name_by_variable(self, variable):
-    return self.variable_map[variable.name]
+    if isinstance(variable, basestring):
+      return self.variable_map[variable]
+    else:
+      return self.variable_map[variable.op.name]
 
   def is_reconfig(self):
     return self.reconfig_phase != 0
+
+  def get_worker_device_name(self):
+    return self.worker_device
+
+  def get_worker_variable_cache_name(self, v):
+    """
+    :param tensorflow.Variable v:
+    :return:
+    """
+    if isinstance(v, basestring):
+      return v + SelfTFOptimizerContext.worker_cache_suffix
+    else:
+      return v.op.name + SelfTFOptimizerContext.worker_cache_suffix
+
+  def get_dest_ps_variable_name(self, v):
+    """
+    :param tensorflow.Variable v:
+    :return:
+    """
+    if isinstance(v,basestring):
+      return v + SelfTFOptimizerContext.dest_ps_suffix
+    else:
+      return v.op.name + SelfTFOptimizerContext.dest_ps_suffix
+
+  def get_variable_name_from_worker_cache(self, v):
+    """
+    :param tensorflow.Variable v:
+    :return:
+    """
+    m = SelfTFOptimizerContext.regex_worker_cache.match(v.op.name)
+    return m.group(1)
+
+  def get_variable_name_from_dest_ps_variable(self, v):
+    """
+    :param tensorflow.Variable v:
+    :return:
+    """
+    m = SelfTFOptimizerContext.regex_dest_ps.match(v.op.name)
+    return m.group(1)
+
+  def swap_src_ps_with_worker_cache(self, replica_v):
+    """
+    :param list[tensorflow.Variable] replica_v:
+    :return:
+    """
+    graph = ops.get_default_graph()
+    for v in replica_v:
+      src_v = tfge.select_ts(v.op.name + "/read", graph=graph)
+      worker_cache_v = tfge.select_ts(self.get_worker_variable_cache_name(v)+"/read",graph=graph)
+      tfge.swap_ts(src_v, worker_cache_v)
 
 def _get_variable_for(v):
   """Returns the ResourceVariable responsible for v, or v if not necessary."""
@@ -108,24 +172,40 @@ class _SelfTFRefVariableProcessor(_OptimizableVariable):
   """for migration use only"""
 
   def __init__(self, v, context=SelfTFOptimizerContext()):
-    # Copy a new variable
+    """
+    :param tensorflow.Variable v:
+    :param context:
+    """
+    # Copy from worker_cache to dst_ps
     self.transfer_op = None
-    with ops.device(context.get_device_name_by_variable(v.name)):
-      replica_v = variables.Variable(v.iinitialized_value(), name=v.name)
-      self.transfer_op = state_ops.assign(replica_v, v) # ???? execute it means ps read from ps ?????
-    self._v = replica_v
+
+    # Create Variable on dst_ps
+    with ops.device(
+        context.get_device_name_by_variable(v)):
+      org_v = v.op.name
+      replica_v = variables.Variable(array_ops.zeros(v.shape),
+                                     name=context.get_dest_ps_variable_name(org_v))
+    self._v = v
+
 
   def target(self):
     return self._v._ref()  # pylint: disable=protected-access
 
   def update_op(self, optimizer, g):
-    if isinstance(g, ops.Tensor):
-      return optimizer._apply_dense(g, self._v)  # pylint: disable=protected-access
-    else:
-      assert isinstance(g, ops.IndexedSlices), ("Gradient ", g, " is neither a "
-                                                                "tensor nor IndexedSlices.")
-      # pylint: disable=protected-access
-      return optimizer._apply_sparse_duplicate_indices(g, self._v)
+
+    # First copy the variable to the dest_ps
+    with ops.device(context.get_device_name_by_variable(
+        context.get_variable_name_from_worker_cache(v))):
+      self.transfer_op = state_ops.assign(replica_v, v) # ???? execute it means ps read from ps ?????
+
+    with ops.control_dependencies([self.transfer_op]):
+      if isinstance(g, ops.Tensor):
+        return optimizer._apply_dense(g, self._v)  # pylint: disable=protected-access
+      else:
+        assert isinstance(g, ops.IndexedSlices), ("Gradient ", g, " is neither a "
+                                                                  "tensor nor IndexedSlices.")
+        # pylint: disable=protected-access
+        return optimizer._apply_sparse_duplicate_indices(g, self._v)
 
 
 class _RefVariableProcessor(_OptimizableVariable):
@@ -142,7 +222,7 @@ class _RefVariableProcessor(_OptimizableVariable):
       return optimizer._apply_dense(g, self._v)  # pylint: disable=protected-access
     else:
       assert isinstance(g, ops.IndexedSlices), ("Gradient ", g, " is neither a "
-                                                "tensor nor IndexedSlices.")
+                                                                "tensor nor IndexedSlices.")
       # pylint: disable=protected-access
       return optimizer._apply_sparse_duplicate_indices(g, self._v)
 
@@ -194,7 +274,7 @@ class _StreamingModelPortProcessor(_OptimizableVariable):
 def _get_processor(v, seltf_context=SelfTFOptimizerContext()):
   """The processor of v."""
   if seltf_context.is_reconfig():
-    return
+    return _SelfTFRefVariableProcessor(v, context=seltf_context)
   if v.op.type == "VarHandleOp":
     return _DenseResourceVariableProcessor(v)
   if isinstance(v, variables.Variable):
@@ -322,9 +402,9 @@ class Optimizer(object):
     return self._name
 
   def minimize(self, loss, global_step=None, var_list=None,
-               gate_gradients=GATE_OP, aggregation_method=None,
-               colocate_gradients_with_ops=False, name=None,
-               grad_loss=None):
+      gate_gradients=GATE_OP, aggregation_method=None,
+      colocate_gradients_with_ops=False, name=None,
+      grad_loss=None, selft_optimizer_context=SelfTFOptimizerContext()):
     """Add operations to minimize `loss` by updating `var_list`.
 
     This method simply combines calls `compute_gradients()` and
@@ -355,11 +435,19 @@ class Optimizer(object):
     Raises:
       ValueError: If some of the variables are not `Variable` objects.
     """
-    grads_and_vars = self.compute_gradients(
-        loss, var_list=var_list, gate_gradients=gate_gradients,
-        aggregation_method=aggregation_method,
-        colocate_gradients_with_ops=colocate_gradients_with_ops,
-        grad_loss=grad_loss)
+    if selft_optimizer_context.is_reconfig():
+      grads_and_vars = self.compute_gradients_reconfig(
+          loss, var_list=var_list, gate_gradients=gate_gradients,
+          aggregation_method=aggregation_method,
+          colocate_gradients_with_ops=colocate_gradients_with_ops,
+          grad_loss=grad_loss, selft_optimizer_context=selft_optimizer_context
+      )
+    else:
+      grads_and_vars = self.compute_gradients(
+          loss, var_list=var_list, gate_gradients=gate_gradients,
+          aggregation_method=aggregation_method,
+          colocate_gradients_with_ops=colocate_gradients_with_ops,
+          grad_loss=grad_loss)
 
     vars_with_grad = [v for g, v in grads_and_vars if g is not None]
     if not vars_with_grad:
@@ -370,6 +458,98 @@ class Optimizer(object):
 
     return self.apply_gradients(grads_and_vars, global_step=global_step,
                                 name=name)
+
+  def compute_gradients_reconfig(self, loss, var_list=None,
+      gate_gradients=GATE_OP,
+      aggregation_method=None,
+      colocate_gradients_with_ops=False,
+      grad_loss=None,
+      selft_optimizer_context=SelfTFOptimizerContext()):
+    """Compute gradients of `loss` for the variables in `var_list`.
+
+    This is the first part of `minimize()`.  It returns a list
+    of (gradient, variable) pairs where "gradient" is the gradient
+    for "variable".  Note that "gradient" can be a `Tensor`, an
+    `IndexedSlices`, or `None` if there is no gradient for the
+    given variable.
+
+    Args:
+      loss: A Tensor containing the value to minimize.
+      var_list: Optional list or tuple of `tf.Variable` to update to minimize
+        `loss`.  Defaults to the list of variables collected in the graph
+        under the key `GraphKey.TRAINABLE_VARIABLES`.
+      gate_gradients: How to gate the computation of gradients.  Can be
+        `GATE_NONE`, `GATE_OP`, or `GATE_GRAPH`.
+      aggregation_method: Specifies the method used to combine gradient terms.
+        Valid values are defined in the class `AggregationMethod`.
+      colocate_gradients_with_ops: If True, try colocating gradients with
+        the corresponding op.
+      grad_loss: Optional. A `Tensor` holding the gradient computed for `loss`.
+
+    Returns:
+      A list of (gradient, variable) pairs. Variable is always present, but
+      gradient can be `None`.
+
+    Raises:
+      TypeError: If `var_list` contains anything else than `Variable` objects.
+      ValueError: If some arguments are invalid.
+    """
+    if gate_gradients not in [Optimizer.GATE_NONE, Optimizer.GATE_OP,
+                              Optimizer.GATE_GRAPH]:
+      raise ValueError("gate_gradients must be one of: Optimizer.GATE_NONE, "
+                       "Optimizer.GATE_OP, Optimizer.GATE_GRAPH.  Not %s" %
+                       gate_gradients)
+    self._assert_valid_dtypes([loss])
+    if grad_loss is not None:
+      self._assert_valid_dtypes([grad_loss])
+    if var_list is None:
+      var_list = (
+          variables.trainable_variables() +
+          ops.get_collection(ops.GraphKeys.TRAINABLE_RESOURCE_VARIABLES))
+    else:
+      var_list = nest.flatten(var_list)
+    # pylint: disable=protected-access
+    var_list += ops.get_collection(ops.GraphKeys._STREAMING_MODEL_PORTS)
+    # pylint: enable=protected-access
+
+    # selftf: create copy in worker
+    var_list_worker_replica = self.create_replica_on_worker(var_list,
+                                                            selft_optimizer_context)
+
+    assign_op_from_src_ps_to_worker_cache = self.get_assign_op_from_src_ps_worker_cache(var_list, var_list_worker_replica)
+    # assign_op_from_src_ps_to_worker_cache = None
+
+    with ops.control_dependencies(assign_op_from_src_ps_to_worker_cache):
+      processors = [_get_processor(v, selft_optimizer_context) for v in var_list]
+      if not var_list:
+        raise ValueError("No variables to optimize.")
+
+      selft_optimizer_context.swap_src_ps_with_worker_cache(var_list)
+
+      var_refs = [p.target() for p in processors]
+
+      # Replace the graph read
+      grads = gradients.gradients(
+          loss, var_refs, grad_ys=grad_loss,
+          gate_gradients=(gate_gradients == Optimizer.GATE_OP),
+          aggregation_method=aggregation_method,
+          colocate_gradients_with_ops=colocate_gradients_with_ops)
+      if gate_gradients == Optimizer.GATE_GRAPH:
+        grads = control_flow_ops.tuple(grads)
+      grads_and_vars = list(zip(grads, var_list))
+      self._assert_valid_dtypes(
+          [v for g, v in grads_and_vars
+           if g is not None and v.dtype != dtypes.resource])
+    return grads_and_vars
+
+  def get_assign_op_from_src_ps_worker_cache(self, var_list, replica_var_list):
+    assert len(var_list) == len(replica_var_list)
+    worker_read_ops = []
+    for x in range(len(replica_var_list)):
+      v = var_list[x]
+      replica_v = replica_var_list[x]
+      worker_read_ops.append(state_ops.assign(replica_v, v))
+    return worker_read_ops
 
   def compute_gradients(self, loss, var_list=None,
                         gate_gradients=GATE_OP,
@@ -576,6 +756,30 @@ class Optimizer(object):
       Valid types for loss, variables and gradients.
     """
     return set([dtypes.float16, dtypes.float32, dtypes.float64])
+
+  def create_replica_on_worker(self, var_list, context):
+    """
+    :param list[tensorflow.Variable] var_list:
+    :param SelfTFOptimizerContext context:
+    :return:
+    """
+    ret = []
+    with ops.device(context.get_worker_device_name()):
+      for v in var_list:
+        replica_v = variables.Variable(initial_value=array_ops.zeros(v.shape),
+                                       name=context.get_worker_variable_cache_name(v),
+                                       trainable=False
+                                       )
+        ret.append(replica_v)
+    return ret
+
+  def get_scope_by_variable(self, v):
+    """
+    :param tensorflow.Variable v:
+    :return:
+    """
+    ret = v.op.name[:v.op.name.rfind("/")]
+    return ret
 
   def _create_slots(self, var_list):
     """Create all slots needed by the variables.

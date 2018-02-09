@@ -89,6 +89,7 @@ See the @{$python/train} guide.
 @@load_variable
 @@list_variables
 @@init_from_checkpoint
+@@SelfTFOptimizerContext
 """
 
 # Optimizers.
@@ -200,6 +201,9 @@ from tensorflow.core.protobuf.cluster_pb2 import JobDef
 from tensorflow.core.protobuf.tensorflow_server_pb2 import ServerDef
 from tensorflow.python.training.server_lib import ClusterSpec
 from tensorflow.python.training.server_lib import Server
+
+# selfTF
+from tensorflow.python.training.optimizer import SelfTFOptimizerContext
 
 # Symbols whitelisted for export without documentation.
 _allowed_symbols = [
