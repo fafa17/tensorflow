@@ -2755,4 +2755,15 @@ TF_Buffer* TF_ApiDefMapGet(TF_ApiDefMap* api_def_map, const char* name,
   return ret;
 #endif  // __ANDROID__
 }
-}  // end extern "C"
+}
+void TF_Reconfig(TF_Session * s, const void *proto, size_t proto_len) {
+  TF_Config new_config = TF_Config();
+  new_config.config.ParseFromArray(proto, proto_len);
+  s->session->Reconfig(&new_config.config);
+}
+void TF_DeprecatedSessionReconfig(TF_DeprecatedSession * s, const void *proto, size_t proto_len) {
+  TF_Config new_config = TF_Config();
+  new_config.config.ParseFromArray(proto, proto_len);
+  s->session->Reconfig(&new_config.config);
+}
+// end extern "C"

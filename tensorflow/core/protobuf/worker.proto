@@ -548,3 +548,21 @@ message StepSequence {
 message GetStepSequenceResponse {
   repeated StepSequence step_sequence = 1;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+// SelfTF//
+////////////////////////////////////////////////////////////////////////////////
+message ResetInterThreadPoolRequest{
+  ConfigProto config = 1;
+}
+
+message ResetInterThreadPoolResponse{
+}
+
+message ResetIntraThreadPoolRequest{
+  ConfigProto config = 1;
+  string session_handle = 2;
+}
+
+message ResetIntraThreadPoolResponse{
+}

@@ -129,6 +129,13 @@ class WorkerInterface {
                                     GetStepSequenceResponse* response,
                                     StatusCallback done) = 0;
 
+  virtual void ResetInterThreadPoolAsync(const ResetInterThreadPoolRequest* request,
+                                         ResetInterThreadPoolResponse* response, StatusCallback done) = 0;
+
+  virtual void ResetIntraThreadPoolAsync(const ResetIntraThreadPoolRequest* request,
+                                         ResetIntraThreadPoolResponse* response, StatusCallback done) = 0;
+
+
   Status GetStatus(const GetStatusRequest* request,
                    GetStatusResponse* response) {
     return CallAndWait(&ME::GetStatusAsync, request, response);
@@ -177,6 +184,15 @@ class WorkerInterface {
                          GetStepSequenceResponse* response) {
     return CallAndWait(&ME::GetStepSequenceAsync, request, response);
   }
+
+  Status ResetInterThreadPool(const ResetInterThreadPoolRequest* request, ResetInterThreadPoolResponse* response) {
+    return CallAndWait(&ME::ResetInterThreadPoolAsync, request, response);
+  }
+
+  Status ResetIntraThreadPool(const ResetIntraThreadPoolRequest* request, ResetIntraThreadPoolResponse* response) {
+    return CallAndWait(&ME::ResetIntraThreadPoolAsync, request, response);
+  }
+
 
  protected:
   // Instances of WorkerInterface must be deleted by a call to

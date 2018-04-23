@@ -86,4 +86,10 @@ service WorkerService {
   // See worker.proto for details.
   rpc CompleteInstance(CompleteInstanceRequest)
       returns (CompleteInstanceResponse);
+
+  // Selftf
+  rpc ResetInterThreadPool(ResetInterThreadPoolRequest) returns (ResetInterThreadPoolResponse);
+
+  // Selftf
+  rpc ResetIntraThreadPool(ResetIntraThreadPoolRequest) returns (ResetIntraThreadPoolResponse);
 }

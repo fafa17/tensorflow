@@ -238,5 +238,10 @@ std::unique_ptr<LocalMaster> LocalMaster::Lookup(const string& target) {
   }
   return ret;
 }
+Status LocalMaster::Reconfig(CallOptions *call_options,
+                             const ReconfigRequest *request,
+                             ReconfigResponse *response) {
+  return Status(error::INVALID_ARGUMENT, "Unimplemented");
+}
 
 }  // namespace tensorflow
