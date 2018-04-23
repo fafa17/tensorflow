@@ -117,6 +117,14 @@ class GrpcRemoteMaster : public MasterInterface {
                 &MasterServiceStub::ReleaseCallable);
   }
 
+  Status Reconfig(CallOptions* call_options, const ReconfigRequest* request,
+                  ReconfigResponse* response) override {
+    ::grpc::ClientContext ctx;
+    ctx.set_fail_fast(false);
+    SetDeadline(&ctx, call_options->GetTimeout());
+    return FromGrpcStatus(stub_->Reconfig(&ctx, *request, response));
+  }
+
  private:
   // Start tracing, attaching a unique ID to both the trace and the RPC.
   port::Tracing::TraceMe TraceRpc(StringPiece name,

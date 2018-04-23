@@ -102,6 +102,7 @@ class GrpcSession : public Session {
                      std::vector<Tensor>* fetch_tensors,
                      RunMetadata* run_metadata) override;
   Status ReleaseCallable(CallableHandle handle) override;
+  Status Reconfig(ConfigProto *new_config) override;
 
  protected:
   // Takes ownership of `*master`.

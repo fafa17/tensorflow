@@ -39,6 +39,7 @@ static const char* grpcMasterService_method_names[] = {
     "/tensorflow.MasterService/MakeCallable",
     "/tensorflow.MasterService/RunCallable",
     "/tensorflow.MasterService/ReleaseCallable",
+    "/tensorflow.MasterService/Reconfig"
 };
 
 std::unique_ptr<MasterService::Stub> MasterService::NewStub(
@@ -74,7 +75,9 @@ MasterService::Stub::Stub(
                              ::grpc::internal::RpcMethod::NORMAL_RPC, channel),
       rpcmethod_ReleaseCallable_(grpcMasterService_method_names[9],
                                  ::grpc::internal::RpcMethod::NORMAL_RPC,
-                                 channel) {}
+                                 channel),
+      rpcmethod_Reconfig_(grpcMasterService_method_names[10],
+                          ::grpc::internal::RpcMethod::NORMAL_RPC, channel){}
 
 ::grpc::Status MasterService::Stub::CreateSession(
     ::grpc::ClientContext* context, const CreateSessionRequest& request,
@@ -146,8 +149,15 @@ MasterService::Stub::Stub(
       channel_.get(), rpcmethod_ReleaseCallable_, context, request, response);
 }
 
+::grpc::Status MasterService::Stub::Reconfig(::grpc::ClientContext* context,
+                                          const ReconfigRequest& request,
+                                          ReconfigResponse* response) {
+  return ::grpc::internal::BlockingUnaryCall(channel_.get(), rpcmethod_Reconfig_, context,
+                                   request, response);
+}
+
 MasterService::AsyncService::AsyncService() {
-  for (int i = 0; i < 10; ++i) {
+  for (int i = 0; i < 11; ++i) {
     AddMethod(new ::grpc::internal::RpcServiceMethod(
         grpcMasterService_method_names[i],
         ::grpc::internal::RpcMethod::NORMAL_RPC, nullptr));

@@ -446,6 +446,30 @@ Status GrpcSession::ReleaseCallable(CallableHandle handle) {
   return master_->ReleaseCallable(&call_options, &req, &resp);
 }
 
+Status GrpcSession::Reconfig(ConfigProto* _new_config){
+  ConfigProto* new_config = new ConfigProto(*_new_config);
+  ReconfigRequest req = ReconfigRequest();
+  ReconfigResponse resp = ReconfigResponse();
+  {
+    mutex_lock l(mu_);
+    if (handle_.empty()) {
+      return errors::InvalidArgument("A session is not created yet....");
+    }
+    req.set_session_handle(handle_);
+  }
+  req.set_allocated_config(new_config);
+
+  CallOptions call_options;
+  call_options.SetTimeout(options_.config.operation_timeout_in_ms());
+  Status s = master_->Reconfig(&call_options, &req, &resp);
+  if (!s.ok()) {
+    LOG(ERROR) << "Could not do reconfig " << s;
+    return s;
+  }
+
+  return Status::OK();
+}
+
 class GrpcSessionFactory : public SessionFactory {
  public:
   bool AcceptsOptions(const SessionOptions& options) override {

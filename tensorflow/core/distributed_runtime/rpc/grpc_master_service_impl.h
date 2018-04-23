@@ -88,6 +88,9 @@ class MasterService final {
     virtual ::grpc::Status ReleaseCallable(
         ::grpc::ClientContext* context, const ReleaseCallableRequest& request,
         ReleaseCallableResponse* response) = 0;
+    virtual ::grpc::Status Reconfig(::grpc::ClientContext* context,
+                                    const ReconfigRequest& request,
+                                    ReconfigResponse* response) = 0;
   };
   class Stub final : public StubInterface {
    public:
@@ -122,6 +125,9 @@ class MasterService final {
     ::grpc::Status ReleaseCallable(::grpc::ClientContext* context,
                                    const ReleaseCallableRequest& request,
                                    ReleaseCallableResponse* response) override;
+    ::grpc::Status Reconfig(::grpc::ClientContext* context,
+                        const ReconfigRequest& request,
+                        ReconfigResponse* response) override;
 
    private:
     std::shared_ptr< ::grpc::ChannelInterface> channel_;
@@ -135,6 +141,7 @@ class MasterService final {
     const ::grpc::internal::RpcMethod rpcmethod_MakeCallable_;
     const ::grpc::internal::RpcMethod rpcmethod_RunCallable_;
     const ::grpc::internal::RpcMethod rpcmethod_ReleaseCallable_;
+    const ::grpc::internal::RpcMethod rpcmethod_Reconfig_;
   };
   static std::unique_ptr<Stub> NewStub(
       const std::shared_ptr< ::grpc::ChannelInterface>& channel,
@@ -222,6 +229,14 @@ class MasterService final {
         ::grpc::CompletionQueue* new_call_cq,
         ::grpc::ServerCompletionQueue* notification_cq, void* tag) {
       ::grpc::Service::RequestAsyncUnary(9, context, request, response,
+                                         new_call_cq, notification_cq, tag);
+    }
+    void RequestReconfig(
+        ::grpc::ServerContext* context, ReconfigRequest* request,
+        ::grpc::ServerAsyncResponseWriter<ReconfigResponse>* response,
+        ::grpc::CompletionQueue* new_call_cq,
+        ::grpc::ServerCompletionQueue* notification_cq, void* tag) {
+      ::grpc::Service::RequestAsyncUnary(10, context, request, response,
                                          new_call_cq, notification_cq, tag);
     }
   };

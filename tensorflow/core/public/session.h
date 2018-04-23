@@ -230,6 +230,8 @@ class Session {
     return errors::Unimplemented(
         "ReleaseCallable is not supported for this session.");
   }
+
+  virtual Status Reconfig(ConfigProto* new_config) = 0;
 };
 
 /// \brief Create a new session with the given options.

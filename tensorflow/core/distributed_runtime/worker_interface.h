@@ -112,6 +112,12 @@ class WorkerInterface {
   virtual void TracingAsync(const TracingRequest* request,
                             TracingResponse* response, StatusCallback done) = 0;
 
+  virtual void ResetInterThreadPoolAsync(const ResetInterThreadPoolRequest* request,
+                            ResetInterThreadPoolResponse* response, StatusCallback done) = 0;
+
+  virtual void ResetIntraThreadPoolAsync(const ResetIntraThreadPoolRequest* request,
+                            ResetIntraThreadPoolResponse* response, StatusCallback done) = 0;
+
   Status GetStatus(const GetStatusRequest* request,
                    GetStatusResponse* response) {
     return CallAndWait(&ME::GetStatusAsync, request, response);
@@ -153,6 +159,14 @@ class WorkerInterface {
 
   Status Tracing(const TracingRequest* request, TracingResponse* response) {
     return CallAndWait(&ME::TracingAsync, request, response);
+  }
+
+  Status ResetInterThreadPool(const ResetInterThreadPoolRequest* request, ResetInterThreadPoolResponse* response) {
+    return CallAndWait(&ME::ResetInterThreadPoolAsync, request, response);
+  }
+
+  Status ResetIntraThreadPool(const ResetIntraThreadPoolRequest* request, ResetIntraThreadPoolResponse* response) {
+    return CallAndWait(&ME::ResetIntraThreadPoolAsync, request, response);
   }
 
  protected:

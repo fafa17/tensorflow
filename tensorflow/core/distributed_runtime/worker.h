@@ -89,6 +89,14 @@ class Worker : public WorkerInterface {
   void TracingAsync(const TracingRequest* request, TracingResponse* response,
                     StatusCallback done) override;
 
+  void ResetInterThreadPoolAsync(const ResetInterThreadPoolRequest* request,
+                                         ResetInterThreadPoolResponse* response, StatusCallback done)
+      override;
+
+  void ResetIntraThreadPoolAsync(const ResetIntraThreadPoolRequest* request,
+                                         ResetIntraThreadPoolResponse* response, StatusCallback done)
+      override;
+
  protected:
   WorkerEnv* const env_;  // Not owned.
 

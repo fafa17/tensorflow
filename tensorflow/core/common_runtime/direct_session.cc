@@ -1734,6 +1734,11 @@ class DirectSession::RunCallableCallFrame : public CallFrameInterface {
   return Status::OK();
 }
 
+::tensorflow::Status DirectSession::Reconfig(tensorflow::ConfigProto *new_config) {
+  return Status(error::CANCELLED, "Not implemented");
+}
+
+
 DirectSession::Callable::~Callable() {
   // We must delete the fields in this order, because the destructor
   // of `executors_and_keys` will call into an object owned by
