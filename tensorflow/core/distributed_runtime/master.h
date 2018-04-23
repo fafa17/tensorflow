@@ -67,6 +67,11 @@ class Master {
                    RunCallableResponse* resp, MyClosure done);
   void ReleaseCallable(const ReleaseCallableRequest* req,
                        ReleaseCallableResponse* resp, MyClosure done);
+  //  3 Type of non data rellocated options
+  //  Change thread pool <--
+  //  Change graph related (e.g: Optimizer) <-- do nothing
+  //  Change graph Optimizer <-- update session opts
+  void Reconfig(const ReconfigRequest* req, ReconfigResponse* rep, MyClosure done);
 
  private:
   typedef Master ME;

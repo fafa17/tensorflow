@@ -1637,6 +1637,17 @@ class Session(BaseSession):
       containers = []
     tf_session.TF_Reset(target, containers, config)
 
+  def reconfig(self, new_config):
+    """
+    :param ConfigProto new_config:
+    :return:
+    """
+    config_str = new_config.SerializeToString()
+    if self._created_with_new_api:
+      tf_session.TF_Reconfig(self._session, config_str)
+    else:
+      tf_session.TF_DeprecatedSessionReconfig(self._session, config_str)
+
 
 @tf_export('InteractiveSession')
 class InteractiveSession(BaseSession):

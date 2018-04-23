@@ -116,4 +116,7 @@ service MasterService {
 
   // Frees resources associated with a callable registered with MakeCallable.
   rpc ReleaseCallable(ReleaseCallableRequest) returns (ReleaseCallableResponse);
+
+  // SelfTF
+  rpc Reconfig(ReconfigRequest) returns (ReconfigResponse);
 }

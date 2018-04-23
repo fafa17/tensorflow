@@ -98,7 +98,8 @@ class MasterInterface {
   virtual Status ReleaseCallable(CallOptions* call_options,
                                  const ReleaseCallableRequest* request,
                                  ReleaseCallableResponse* response) = 0;
-
+  virtual Status Reconfig(CallOptions* call_options, const ReconfigRequest* request,
+                          ReconfigResponse* response) = 0;
  protected:
   // NOTE: This should only be called by implementations of this
   // interface whose CreateRunStepResponse() method returns a

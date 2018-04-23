@@ -357,7 +357,7 @@ class Supervisor(object):
     self._init_session_manager(session_manager=session_manager)
     self._verify_setup()
     # The graph is not allowed to change anymore.
-    graph.finalize()
+    # graph.finalize()
 
   def _init_session_manager(self, session_manager=None):
     if session_manager is None:
