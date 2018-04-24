@@ -264,3 +264,12 @@ message ListDevicesResponse {
   repeated DeviceAttributes local_device = 1;
   repeated DeviceAttributes remote_device = 2;
 }
+
+//SelfTF
+message ReconfigRequest {
+  string session_handle = 1;
+  ConfigProto config = 2;
+}
+
+message ReconfigResponse {
+}

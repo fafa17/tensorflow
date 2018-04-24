@@ -96,6 +96,7 @@ class GrpcSession : public Session {
 
   Status ListDevices(std::vector<DeviceAttributes>* response) override;
 
+  Status Reconfig(ConfigProto *new_config) override;
  protected:
   // Takes ownership of `*master`.
   void SetRemoteMaster(std::unique_ptr<MasterInterface> master);

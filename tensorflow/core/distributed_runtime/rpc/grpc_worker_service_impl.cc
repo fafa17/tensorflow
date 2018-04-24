@@ -50,6 +50,10 @@ const char* GrpcWorkerMethodName(GrpcWorkerMethod id) {
       return "/tensorflow.WorkerService/Logging";
     case GrpcWorkerMethod::kTracing:
       return "/tensorflow.WorkerService/Tracing";
+    case GrpcWorkerMethod::kResetInterThreadPool:
+      return "/tensorflow.WorkerService/ResetInterThreadPool";
+    case GrpcWorkerMethod::kResetIntraThreadPool:
+      return "/tensorflow.WorkerService/ResetIntraThreadPool";
   }
   // Shouldn't be reached.
   LOG(FATAL) << "Invalid id: this line shouldn't be reached.";

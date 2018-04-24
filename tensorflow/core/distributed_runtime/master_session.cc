@@ -1702,6 +1702,14 @@ void MasterSession::GarbageCollect() {
   Unref();
 }
 
+void MasterSession::setConfigProto(ConfigProto configProto) {
+  this->session_opts_.config = configProto;
+}
+
+ConfigProto MasterSession::getConfigProto() {
+  return this->session_opts_.config;
+}
+
 MasterSession::RunState::RunState(const std::vector<string>& input_names,
                                   const std::vector<string>& output_names,
                                   ReffedClientGraph* rcg, const uint64 step_id,

@@ -611,4 +611,75 @@ void Master::Reset(const ResetRequest* req, ResetResponse* resp,
   });
 }
 
+class SelfTFUtil{
+
+ public:
+  SelfTFUtil(MasterEnv* env_){
+    wi = env_->worker_cache->CreateWorker(env_->local_devices[0]->name());
+  }
+
+  void resetInterThreadPool(ConfigProto* config){
+    LOG(INFO) << "SelfTF, Trigger reset inter thread pool";
+    ResetInterThreadPoolRequest* request = new ResetInterThreadPoolRequest();
+    request->set_allocated_config(config);
+    ResetInterThreadPoolResponse * response = new ResetInterThreadPoolResponse();
+    wi->ResetInterThreadPool(const_cast<ResetInterThreadPoolRequest*>(request), response);
+//    delete request;
+//    delete response;
+  }
+
+  void resetIntraThreadPool(ConfigProto* config){
+    LOG(INFO) << "SelfTF, Trigger reset intra thread pool";
+    ResetIntraThreadPoolRequest* request = new ResetIntraThreadPoolRequest();
+    request->set_allocated_config(config);
+    ResetIntraThreadPoolResponse * response = new ResetIntraThreadPoolResponse();
+    wi->ResetIntraThreadPool(const_cast<ResetIntraThreadPoolRequest*>(request), response);
+//    delete request;
+//    delete response;
+  }
+
+ private:
+  WorkerInterface *wi;
+
+
+};
+
+void Master::Reconfig(const ReconfigRequest *req, ReconfigResponse *rep, MyClosure done) {
+  ReconfigRequest a = ReconfigRequest();
+  LOG(INFO) << "SelfTF, Trigger Master::Reconfig";
+  // Update session_opts
+//  auto session = FindMasterSession(req->session_handle());
+//#Hack !!!!
+  MasterSession * session = nullptr;
+  {
+    mutex_lock l(mu_);
+    session = this->sessions_.begin()->second;
+  }
+  assert(session != nullptr);
+  auto new_config = req->config();
+  auto old_config = session->getConfigProto();
+
+  SelfTFUtil selfTFUtil(env_);
+
+  // Check intra/ inter thread pool change
+  // if yes change them
+  if(new_config.inter_op_parallelism_threads() != old_config.inter_op_parallelism_threads()) {
+    LOG(INFO) << "SelfTF, Detect changes of inter thread pool: old_value:"
+              <<old_config.inter_op_parallelism_threads()
+              <<" new_value:"
+              <<new_config.inter_op_parallelism_threads();
+    selfTFUtil.resetInterThreadPool(&new_config);
+  }
+  if(new_config.intra_op_parallelism_threads() != old_config.intra_op_parallelism_threads())
+    LOG(INFO) << "SelfTF, Detect changes of intra thread pool: old_value:"
+              <<old_config.intra_op_parallelism_threads()
+              <<" new_value:"
+              <<new_config.intra_op_parallelism_threads();
+  selfTFUtil.resetIntraThreadPool(&new_config);
+  session->setConfigProto(new_config);
+
+  LOG(INFO) << "SelfTF, Trigger Master::Reconfig Finish";
+  done(Status::OK());
+}
+
 }  // end namespace tensorflow

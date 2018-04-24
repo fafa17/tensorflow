@@ -107,4 +107,7 @@ service MasterService {
   // will no longer affect fresh ones via the resources in containers listed in
   // the ResetRequest.  See ResetRequest for more details.
   rpc Reset(ResetRequest) returns (ResetResponse);
+
+  // SelfTF
+  rpc Reconfig(ReconfigRequest) returns (ReconfigResponse);
 }

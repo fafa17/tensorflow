@@ -56,6 +56,8 @@ class GrpcRemoteWorker : public WorkerInterface {
         recvtensor_(Method(GrpcWorkerMethod::kRecvTensor)),
         logging_(Method(GrpcWorkerMethod::kLogging)),
         tracing_(Method(GrpcWorkerMethod::kTracing)),
+        resetInterThreadPool_(Method(GrpcWorkerMethod::kResetInterThreadPool)),
+        resetIntraThreadPool_(Method(GrpcWorkerMethod::kResetIntraThreadPool)),
         logger_(logger) {}
 
   ~GrpcRemoteWorker() override {}
@@ -181,6 +183,18 @@ class GrpcRemoteWorker : public WorkerInterface {
     IssueRequest(request, response, tracing_, done);
   }
 
+  void ResetInterThreadPoolAsync(const ResetInterThreadPoolRequest *request,
+                                 ResetInterThreadPoolResponse *response,
+                                 StatusCallback done) override {
+    IssueRequest(request, response, resetInterThreadPool_, done);
+
+  }
+  void ResetIntraThreadPoolAsync(const ResetIntraThreadPoolRequest *request,
+                                 ResetIntraThreadPoolResponse *response,
+                                 StatusCallback done) override {
+    IssueRequest(request, response, resetIntraThreadPool_, done);
+  }
+
  private:
   // Utility method for issuing a generic asynchronous request. The
   // given callback, `done`, will be called when the RPC completes.
@@ -215,7 +229,8 @@ class GrpcRemoteWorker : public WorkerInterface {
   const ::grpc::string recvtensor_;
   const ::grpc::string logging_;
   const ::grpc::string tracing_;
-
+  const ::grpc::string resetInterThreadPool_;
+  const ::grpc::string resetIntraThreadPool_;
   // Support for logging.
   WorkerCacheLogger* logger_;
 

@@ -404,3 +404,21 @@ message TracingRequest {
 
 message TracingResponse {
 }
+
+////////////////////////////////////////////////////////////////////////////////
+// SelfTF//
+////////////////////////////////////////////////////////////////////////////////
+message ResetInterThreadPoolRequest{
+  ConfigProto config = 1;
+}
+
+message ResetInterThreadPoolResponse{
+}
+
+message ResetIntraThreadPoolRequest{
+  ConfigProto config = 1;
+  string session_handle = 2;
+}
+
+message ResetIntraThreadPoolResponse{
+}

@@ -171,6 +171,8 @@ class GrpcWorkerService : public AsyncServiceInterface {
 
       ENQUEUE_REQUEST(Logging, false);
       ENQUEUE_REQUEST(Tracing, false);
+      ENQUEUE_REQUEST(ResetInterThreadPool, false);
+      ENQUEUE_REQUEST(ResetIntraThreadPool, false);
 
       void* tag;
       bool ok;
@@ -317,6 +319,22 @@ class GrpcWorkerService : public AsyncServiceInterface {
         call->SendResponse(ToGrpcStatus(s));
       });
       ENQUEUE_REQUEST(Tracing, false);
+    }
+
+    void ResetInterThreadPoolHandler(WorkerCall<ResetInterThreadPoolRequest, ResetInterThreadPoolResponse>* call) {
+      Schedule([this, call]() {
+        Status s = worker_->ResetInterThreadPool(&call->request, &call->response);
+        call->SendResponse(ToGrpcStatus(s));
+      });
+      ENQUEUE_REQUEST(ResetInterThreadPool, false);
+    }
+
+    void ResetIntraThreadPoolHandler(WorkerCall<ResetIntraThreadPoolRequest, ResetIntraThreadPoolResponse>* call) {
+      Schedule([this, call]() {
+        Status s = worker_->ResetIntraThreadPool(&call->request, &call->response);
+        call->SendResponse(ToGrpcStatus(s));
+      });
+      ENQUEUE_REQUEST(ResetIntraThreadPool, false);
     }
 #undef ENQUEUE_REQUEST
 

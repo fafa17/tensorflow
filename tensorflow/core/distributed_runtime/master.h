@@ -61,6 +61,12 @@ class Master {
   // See tensorflow::Reset() and the comment on ResetRequest.
   void Reset(const ResetRequest* req, ResetResponse* resp, MyClosure done);
 
+  //  3 Type of non data rellocated options
+  //  Change thread pool <--
+  //  Change graph related (e.g: Optimizer) <-- do nothing
+  //  Change graph Optimizer <-- update session opts
+  void Reconfig(const ReconfigRequest* req, ReconfigResponse* rep, MyClosure done);
+
  private:
   typedef Master ME;
 

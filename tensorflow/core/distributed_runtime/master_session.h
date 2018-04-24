@@ -101,6 +101,10 @@ class MasterSession : public core::RefCounted {
   // completion of all work.
   void GarbageCollect();
 
+  // SelftTf:
+  ConfigProto getConfigProto();
+  void setConfigProto(ConfigProto configProto);
+
  private:
   SessionOptions session_opts_;
 
