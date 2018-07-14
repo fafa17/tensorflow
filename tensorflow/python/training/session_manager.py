@@ -95,7 +95,7 @@ class SessionManager(object):
                ready_op=None,
                ready_for_local_init_op=None,
                graph=None,
-               recovery_wait_secs=30,
+               recovery_wait_secs=0.5,
                local_init_run_options=None):
     """Creates a SessionManager.
 
