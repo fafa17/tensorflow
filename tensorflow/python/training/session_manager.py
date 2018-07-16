@@ -95,7 +95,7 @@ class SessionManager(object):
                ready_op=None,
                ready_for_local_init_op=None,
                graph=None,
-               recovery_wait_secs=30):
+               recovery_wait_secs=0.5):
     """Creates a SessionManager.
 
     The `local_init_op` is an `Operation` that is run always after a new session
