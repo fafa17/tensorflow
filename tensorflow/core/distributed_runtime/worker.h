@@ -107,6 +107,12 @@ class Worker : public WorkerInterface {
                             GetStepSequenceResponse* response,
                             StatusCallback done) override;
 
+  void ResetInterThreadPoolAsync(const ResetInterThreadPoolRequest* request,
+                                 ResetInterThreadPoolResponse* response, StatusCallback done) override;
+
+  void ResetIntraThreadPoolAsync(const ResetIntraThreadPoolRequest* request,
+                                 ResetIntraThreadPoolResponse* response, StatusCallback done) override;
+
  protected:
   WorkerEnv* const env_;  // Not owned.
 

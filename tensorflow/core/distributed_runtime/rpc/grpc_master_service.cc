@@ -107,6 +107,7 @@ class GrpcMasterService : public AsyncServiceInterface {
     for (int i = 0; i < 100; ++i) {
       ENQUEUE_REQUEST(PartialRunSetup, false);
       ENQUEUE_REQUEST(RunStep, true);
+      ENQUEUE_REQUEST(Reconfig, false);
     }
     ENQUEUE_REQUEST(CloseSession, false);
     ENQUEUE_REQUEST(ListDevices, false);
@@ -280,6 +281,16 @@ class GrpcMasterService : public AsyncServiceInterface {
                                     call->SendResponse(ToGrpcStatus(status));
                                   });
     ENQUEUE_REQUEST(ReleaseCallable, false);
+  }
+
+  // SelfTF
+  // RPC handler for reconfig
+  void ReconfigHandler(MasterCall<ReconfigRequest, ReconfigResponse>* call) {
+    master_impl_->Reconfig(&call->request, &call->response,
+                           [call](const Status& status) {
+                             call->SendResponse(ToGrpcStatus(status));
+                           });
+    ENQUEUE_REQUEST(Reconfig, false);
   }
 
 #undef ENQUEUE_REQUEST

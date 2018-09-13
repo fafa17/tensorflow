@@ -38,6 +38,8 @@ limitations under the License.
 #include "tensorflow/core/platform/types.h"
 #include "tensorflow/core/public/session.h"
 
+#include "tensorflow/core/protobuf/config.pb.h"
+
 namespace tensorflow {
 class Device;
 class DeviceMgr;
@@ -177,6 +179,10 @@ struct TF_ApiDefMap {
 #endif
   bool update_docs_called GUARDED_BY(lock);
   tensorflow::mutex lock;
+};
+
+struct TF_Config{
+  tensorflow::ConfigProto config;
 };
 
 namespace tensorflow {

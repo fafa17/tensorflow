@@ -332,3 +332,12 @@ message ReleaseCallableRequest {
 
 message ReleaseCallableResponse {
 }
+
+//SelfTF
+message ReconfigRequest {
+  string session_handle = 1;
+  ConfigProto config = 2;
+}
+
+message ReconfigResponse {
+}
